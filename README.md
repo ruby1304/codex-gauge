@@ -15,7 +15,7 @@
   <img src="docs/screenshot.png" width="430" alt="Codex Gauge popover">
 </p>
 
-A tiny, beautiful native **macOS menu-bar app** that shows your **Codex (ChatGPT) usage** — the 5-hour window and the weekly window — as live gauges, with reset countdowns and low-quota alerts.
+A tiny native **macOS menu-bar app** that shows your **Codex (ChatGPT) usage** — the 5-hour window and the weekly window — as live gauges, with reset countdowns and low-quota alerts.
 
 ## Why it's different
 
