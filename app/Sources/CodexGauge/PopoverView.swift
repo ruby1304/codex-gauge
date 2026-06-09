@@ -4,13 +4,17 @@ import AppKit
 struct PopoverView: View {
     var model: UsageModel
     @AppStorage(Prefs.activeQueryKey) private var activeQueryEnabled = false
+    @AppStorage(LanguageKey) private var lang = "en"
+    @Environment(\.openSettings) private var openSettings
+
+    private var t: Strings { Strings(lang) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
             HStack(spacing: 16) {
-                RingGauge(title: "5 小时窗", window: model.fiveHour)
-                RingGauge(title: "本周窗", window: model.weekly)
+                RingGauge(title: t("5-Hour", "5 小时"), window: model.fiveHour, t: t)
+                RingGauge(title: t("Weekly", "每周"), window: model.weekly, t: t)
             }
             .padding(.horizontal, 18)
             .padding(.top, 6)
@@ -18,7 +22,7 @@ struct PopoverView: View {
             Divider().overlay(Theme.border).padding(.horizontal, 18).padding(.top, 16)
             footer
         }
-        .frame(width: 296)
+        .frame(width: 300)
         .background(Theme.panel)
     }
 
@@ -38,7 +42,10 @@ struct PopoverView: View {
             Text(ageText)
                 .font(.system(size: 11))
                 .foregroundStyle(Theme.fg3)
-            SettingsLink {
+            Button {
+                openSettings()
+                NSApp.activate(ignoringOtherApps: true)
+            } label: {
                 Image(systemName: "gearshape").font(.system(size: 12))
             }
             .buttonStyle(.plain)
@@ -53,7 +60,7 @@ struct PopoverView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 14) {
                 Button { model.refresh() } label: {
-                    Label("刷新", systemImage: "arrow.clockwise").font(.system(size: 11.5))
+                    Label(t("Refresh", "刷新"), systemImage: "arrow.clockwise").font(.system(size: 11.5))
                 }
                 .buttonStyle(.plain).foregroundStyle(Theme.fg2)
 
@@ -62,31 +69,34 @@ struct PopoverView: View {
                         if model.busy {
                             ProgressView().controlSize(.small)
                         } else {
-                            Label("强制查最新", systemImage: "bolt").font(.system(size: 11.5))
+                            Label(t("Force Refresh", "强制刷新"), systemImage: "bolt").font(.system(size: 11.5))
                         }
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(Theme.warn)
                     .disabled(model.busy)
-                    .help("让 Codex 真发一次请求取此刻精确值,会消耗一点点 5 小时额度")
                 }
 
                 Spacer()
 
-                Link(destination: URL(string: "https://github.com/ruby1304/codex-gauge")!) {
+                Button {
+                    NSWorkspace.shared.open(URL(string: "https://github.com/ruby1304/codex-gauge")!)
+                } label: {
                     Label("GitHub", systemImage: "arrow.up.right").font(.system(size: 11))
                 }
+                .buttonStyle(.plain)
                 .foregroundStyle(Theme.fg3)
 
                 Button { NSApp.terminate(nil) } label: {
-                    Text("退出").font(.system(size: 11))
+                    Text(t("Quit", "退出")).font(.system(size: 11))
                 }
                 .buttonStyle(.plain).foregroundStyle(Theme.fg3)
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 12)
 
-            Text("零消耗 · 只读本地 session,不碰 token / 不发请求")
+            Text(t("Reads local files only. Never your token, never the network.",
+                   "仅读取本地文件。不触及令牌,不连接网络。"))
                 .font(.system(size: 10))
                 .foregroundStyle(Theme.fg3)
                 .padding(.horizontal, 18)
@@ -95,16 +105,19 @@ struct PopoverView: View {
     }
 
     private var ageText: String {
-        guard let a = model.snapshotAge else { return "—" }
-        if a < 3600 { return "快照 \(Int(a / 60)) 分钟前" }
-        if a < 86400 { return "快照 \(Int(a / 3600)) 小时前" }
-        return "快照 \(Int(a / 86400)) 天前"
+        guard let a = model.snapshotAge else { return "" }
+        let rel: String
+        if a < 3600 { rel = "\(Int(a / 60))m" }
+        else if a < 86400 { rel = "\(Int(a / 3600))h" }
+        else { rel = "\(Int(a / 86400))d" }
+        return t("Updated \(rel) ago", "\(rel)前更新")
     }
 }
 
 struct RingGauge: View {
     let title: String
     let window: UsageWindow?
+    let t: Strings
 
     var body: some View {
         let rem = window?.remaining
@@ -124,7 +137,7 @@ struct RingGauge: View {
                         .font(.system(size: 28, weight: .semibold, design: .rounded))
                         .monospacedDigit()
                         .foregroundStyle(Theme.fg)
-                    Text("剩 %")
+                    Text(t("remaining", "剩余"))
                         .font(.system(size: 9, weight: .medium))
                         .foregroundStyle(Theme.fg3)
                 }
@@ -145,13 +158,13 @@ struct RingGauge: View {
     private var resetText: String {
         guard let r = window?.resetsAt else { return " " }
         let dt = r.timeIntervalSinceNow
-        if dt <= 0 { return "即将重置" }
-        if dt < 3600 { return "\(Int(dt / 60)) 分后重置" }
-        if dt < 86400 {
-            let h = Int(dt / 3600)
-            let m = Int(dt.truncatingRemainder(dividingBy: 3600) / 60)
-            return "\(h)时\(m)分后重置"
-        }
-        return "\(Int(dt / 86400)) 天后重置"
+        if dt <= 0 { return t("Resetting…", "重置中…") }
+        let span: String
+        if dt < 3600 { span = "\(Int(dt / 60))m" }
+        else if dt < 86400 {
+            let h = Int(dt / 3600), m = Int(dt.truncatingRemainder(dividingBy: 3600) / 60)
+            span = m > 0 ? "\(h)h \(m)m" : "\(h)h"
+        } else { span = "\(Int(dt / 86400))d" }
+        return t("Resets in \(span)", "\(span)后重置")
     }
 }

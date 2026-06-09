@@ -1,6 +1,5 @@
 import SwiftUI
 
-@main
 struct CodexGaugeApp: App {
     @State private var model = UsageModel()
 

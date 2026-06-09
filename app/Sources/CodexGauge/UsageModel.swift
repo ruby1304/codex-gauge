@@ -18,6 +18,7 @@ enum Prefs {
             thresholdKey: 10,
             alertKey: true,
             activeQueryKey: false,
+            LanguageKey: "en",   // English by default; System / 中文 selectable in Settings
         ])
     }
     static var codexPath: String { UserDefaults.standard.string(forKey: codexPathKey) ?? "~/.codex/sessions" }
@@ -48,7 +49,9 @@ final class UsageModel {
 
     init() {
         Prefs.registerDefaults()
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        if Bundle.main.bundleIdentifier != nil {   // skip when run as a bare binary (e.g. --shot)
+            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        }
         refresh()
         restartTimer()
     }
@@ -105,18 +108,28 @@ final class UsageModel {
 
     private func checkAlerts() {
         guard Prefs.alertEnabled else { return }
-        let t = Double(Prefs.threshold)
+        let s = Strings(UserDefaults.standard.string(forKey: LanguageKey) ?? "system")
+        let th = Double(Prefs.threshold)
         if let r = fiveHour?.remaining {
-            if r < t && !alertedFive { Self.notify("Codex 5 小时额度偏低", "只剩 \(Int(r))% 了"); alertedFive = true }
-            if r >= t { alertedFive = false }
+            if r < th && !alertedFive {
+                Self.notify(s("Codex 5-hour quota is low", "Codex 5 小时额度偏低"),
+                            s("Only \(Int(r))% remaining", "只剩 \(Int(r))% 了"))
+                alertedFive = true
+            }
+            if r >= th { alertedFive = false }
         }
         if let r = weekly?.remaining {
-            if r < t && !alertedWeek { Self.notify("Codex 本周额度偏低", "只剩 \(Int(r))% 了"); alertedWeek = true }
-            if r >= t { alertedWeek = false }
+            if r < th && !alertedWeek {
+                Self.notify(s("Codex weekly quota is low", "Codex 本周额度偏低"),
+                            s("Only \(Int(r))% remaining", "只剩 \(Int(r))% 了"))
+                alertedWeek = true
+            }
+            if r >= th { alertedWeek = false }
         }
     }
 
     static func notify(_ title: String, _ body: String) {
+        guard Bundle.main.bundleIdentifier != nil else { return }
         let c = UNMutableNotificationContent()
         c.title = title; c.body = body; c.sound = .default
         UNUserNotificationCenter.current().add(
