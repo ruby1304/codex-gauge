@@ -6,6 +6,12 @@
   <b>Your Codex usage limits, always in the menu bar —<br>without ever spending a token to check them.</b>
 </p>
 <p align="center">
+  <a href="https://github.com/ruby1304/codex-gauge/releases/latest"><img src="https://img.shields.io/github/v/release/ruby1304/codex-gauge?color=0e8a4f" alt="Release"></a>
+  <img src="https://img.shields.io/badge/macOS-14%2B-lightgrey" alt="macOS 14+">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/ruby1304/codex-gauge?color=0e8a4f" alt="MIT License"></a>
+  <a href="https://github.com/ruby1304/codex-gauge/stargazers"><img src="https://img.shields.io/github/stars/ruby1304/codex-gauge?style=social" alt="Stars"></a>
+</p>
+<p align="center">
   <img src="docs/screenshot.png" width="430" alt="Codex Gauge popover">
 </p>
 
