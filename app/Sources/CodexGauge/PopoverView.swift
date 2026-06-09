@@ -3,6 +3,7 @@ import AppKit
 
 struct PopoverView: View {
     var model: UsageModel
+    var ringTrimScale: Double = 1.0   // 1.0 live; <1 used only for GIF frame rendering
     @AppStorage(Prefs.activeQueryKey) private var activeQueryEnabled = false
     @AppStorage(LanguageKey) private var lang = "en"
     @Environment(\.openSettings) private var openSettings
@@ -13,8 +14,8 @@ struct PopoverView: View {
         VStack(alignment: .leading, spacing: 0) {
             header
             HStack(spacing: 16) {
-                RingGauge(title: t("5-Hour", "5 小时"), window: model.fiveHour, t: t)
-                RingGauge(title: t("Weekly", "每周"), window: model.weekly, t: t)
+                RingGauge(title: t("5-Hour", "5 小时"), window: model.fiveHour, t: t, trimScale: ringTrimScale)
+                RingGauge(title: t("Weekly", "每周"), window: model.weekly, t: t, trimScale: ringTrimScale)
             }
             .padding(.horizontal, 18)
             .padding(.top, 6)
@@ -118,6 +119,7 @@ struct RingGauge: View {
     let title: String
     let window: UsageWindow?
     let t: Strings
+    var trimScale: Double = 1.0
 
     var body: some View {
         let rem = window?.remaining
@@ -128,7 +130,7 @@ struct RingGauge: View {
             ZStack {
                 Circle().stroke(Theme.track, lineWidth: 8)
                 Circle()
-                    .trim(from: 0, to: frac)
+                    .trim(from: 0, to: frac * trimScale)
                     .stroke(color, style: StrokeStyle(lineWidth: 8, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                     .animation(.easeOut(duration: 0.55), value: frac)

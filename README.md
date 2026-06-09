@@ -12,7 +12,7 @@
   <a href="https://github.com/ruby1304/codex-gauge/stargazers"><img src="https://img.shields.io/github/stars/ruby1304/codex-gauge?style=social" alt="Stars"></a>
 </p>
 <p align="center">
-  <img src="docs/screenshot.png" width="430" alt="Codex Gauge popover">
+  <img src="docs/demo.gif" width="430" alt="Codex Gauge popover — the two usage rings drawing in">
 </p>
 
 A tiny native **macOS menu-bar app** that shows your **Codex (ChatGPT) usage** — the 5-hour window and the weekly window — as live gauges, with reset countdowns and low-quota alerts.
